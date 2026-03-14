@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/constants/app_colors.dart';
 import 'providers/cart_provider.dart';
+import 'views/cart/cart_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +64,13 @@ class HomeScaffold extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.shopping_cart_outlined),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const CartScreen(),
+                          ),
+                        );
+                      },
                     ),
                     if (cart.itemTypesCount > 0)
                       Positioned(

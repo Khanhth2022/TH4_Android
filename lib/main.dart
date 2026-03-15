@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/constants/app_colors.dart';
 import 'providers/cart_provider.dart';
-import 'views/cart/cart_screen.dart';
+import 'views/home/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,77 +40,7 @@ class MyApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        home: const HomeScaffold(),
-      ),
-    );
-  }
-}
-
-class HomeScaffold extends StatelessWidget {
-  const HomeScaffold({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('TH4 - Nhóm 6'),
-        actions: [
-          Consumer<CartProvider>(
-            builder: (context, cart, _) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.shopping_cart_outlined),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const CartScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    if (cart.itemTypesCount > 0)
-                      Positioned(
-                        right: 6,
-                        top: 8,
-                        child: Container(
-                          height: 18,
-                          width: 18,
-                          alignment: Alignment.center,
-                          decoration: const BoxDecoration(
-                            color: AppColors.danger,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            '${cart.itemTypesCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Text(
-          'Khung ứng dụng đã sẵn sàng.\nTiếp theo có thể ghép Home/Detail/Cart/Checkout.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        home: const HomeScreen(),
       ),
     );
   }

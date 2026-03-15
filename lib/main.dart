@@ -53,7 +53,7 @@ class HomeScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TH4 - Nhóm [Số nhóm]'),
+        title: const Text('TH4 - Nhóm 6'),
         actions: [
           Consumer<CartProvider>(
             builder: (context, cart, _) {

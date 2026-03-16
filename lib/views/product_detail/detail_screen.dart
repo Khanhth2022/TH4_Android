@@ -36,9 +36,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     ).push(MaterialPageRoute(builder: (_) => const CartScreen()));
   }
 
-  void _openChatInput() {
-    final controller = TextEditingController();
-    showModalBottomSheet(
+  Future<void> _openChatInput() async {
+    final messenger = ScaffoldMessenger.of(context);
+    String messageText = '';
+
+    final String? submittedMessage = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -62,10 +64,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               const SizedBox(height: 10),
               TextField(
-                controller: controller,
                 autofocus: true,
                 maxLines: 3,
                 minLines: 1,
+                onChanged: (value) => messageText = value,
                 decoration: const InputDecoration(
                   hintText: 'Nhập tin nhắn cho shop...',
                   border: OutlineInputBorder(),
@@ -76,16 +78,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          controller.text.trim().isEmpty
-                              ? 'Vui lòng nhập nội dung tin nhắn'
-                              : 'Đã gửi tin nhắn tới shop',
-                        ),
-                      ),
-                    );
+                    FocusScope.of(sheetContext).unfocus();
+                    Navigator.pop(sheetContext, messageText.trim());
                   },
                   child: const Text('Gửi tin nhắn'),
                 ),
@@ -94,7 +88,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         );
       },
-    ).whenComplete(controller.dispose);
+    );
+
+    if (!mounted || submittedMessage == null) {
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          submittedMessage.isEmpty
+              ? 'Vui lòng nhập nội dung tin nhắn'
+              : 'Đã gửi tin nhắn tới shop',
+        ),
+      ),
+    );
   }
 
   void _showAddToCartSheet() {

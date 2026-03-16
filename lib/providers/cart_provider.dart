@@ -151,6 +151,24 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeItems(List<CartItemModel> itemsToRemove) async {
+    if (itemsToRemove.isEmpty) {
+      return;
+    }
+
+    _items.removeWhere((item) {
+      return itemsToRemove.any(
+        (target) =>
+            target.product.id == item.product.id &&
+            target.selectedSize == item.selectedSize &&
+            target.selectedColor == item.selectedColor,
+      );
+    });
+
+    await _saveCart();
+    notifyListeners();
+  }
+
   Future<void> clearAll() async {
     _items.clear();
     final prefs = await SharedPreferences.getInstance();

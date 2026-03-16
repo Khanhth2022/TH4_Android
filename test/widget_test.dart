@@ -10,12 +10,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:e_commerce/main.dart';
 import 'package:e_commerce/providers/cart_provider.dart';
+import 'package:e_commerce/providers/order_provider.dart';
 
 void main() {
   testWidgets('App renders required home app bar', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(cartProvider: CartProvider()));
+    await tester.pumpWidget(
+      MyApp(
+        cartProvider: CartProvider(),
+        orderProvider: OrderProvider(),
+      ),
+    );
 
-    expect(find.text('TH4 - Nhóm [Số nhóm]'), findsOneWidget);
-    expect(find.byIcon(Icons.shopping_cart_outlined), findsOneWidget);
+    expect(find.text('TH4 - Nhóm 6'), findsOneWidget);
+    expect(find.byIcon(Icons.shopping_bag_outlined), findsOneWidget);
   });
 }

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../providers/cart_provider.dart';
+import '../checkout/checkout_screen.dart';
+import '../checkout/order_history_screen.dart';
 import 'widgets/cart_item_tile.dart';
 import 'widgets/cart_summary_bar.dart';
 
@@ -15,6 +17,17 @@ class CartScreen extends StatelessWidget {
 			appBar: AppBar(
 				title: const Text('Giỏ hàng'),
 				actions: [
+					IconButton(
+						tooltip: 'Đơn mua',
+						onPressed: () {
+							Navigator.of(context).push(
+								MaterialPageRoute<void>(
+									builder: (_) => const OrderHistoryScreen(),
+								),
+							);
+						},
+						icon: const Icon(Icons.receipt_long_outlined),
+					),
 					Consumer<CartProvider>(
 						builder: (context, cart, child) {
 							return IconButton(
@@ -65,7 +78,7 @@ class CartScreen extends StatelessWidget {
 								onToggleSelectAll: (selected) {
 									cart.toggleSelectAll(selected);
 								},
-								onBuy: () => _simulateBuy(context),
+								onBuy: () => _goToCheckout(context),
 							),
 						],
 					);
@@ -141,41 +154,29 @@ class CartScreen extends StatelessWidget {
 		}
 	}
 
-	Future<void> _simulateBuy(BuildContext context) async {
+	Future<void> _goToCheckout(BuildContext context) async {
 		final cart = context.read<CartProvider>();
-		final selectedCount = cart.selectedItems.length;
-		final total = cart.selectedTotalPrice;
-
-		final confirm = await showDialog<bool>(
-			context: context,
-			builder: (context) {
-				return AlertDialog(
-					title: const Text('Xác nhận mua hàng'),
-					content: Text(
-						'Bạn sẽ mua $selectedCount sản phẩm với tổng tiền \$${total.toStringAsFixed(2)}.',
-					),
-					actions: [
-						TextButton(
-							onPressed: () => Navigator.of(context).pop(false),
-							child: const Text('Hủy'),
-						),
-						FilledButton(
-							onPressed: () => Navigator.of(context).pop(true),
-							child: const Text('Xác nhận'),
-						),
-					],
-				);
-			},
-		);
-
-		if (confirm == true && context.mounted) {
-			await cart.clearSelected();
-			if (context.mounted) {
-				ScaffoldMessenger.of(context).showSnackBar(
-					const SnackBar(content: Text('Đặt hàng thành công (mô phỏng)')),
-				);
-			}
+		if (cart.selectedItems.isEmpty) {
+			return;
 		}
+
+		final checkoutItems = cart.selectedItems
+				.map(
+					(item) => item.copyWith(
+						product: item.product,
+						quantity: item.quantity,
+						selected: item.selected,
+						selectedSize: item.selectedSize,
+						selectedColor: item.selectedColor,
+					),
+				)
+				.toList(growable: false);
+
+		await Navigator.of(context).push(
+			MaterialPageRoute<void>(
+				builder: (_) => CheckoutScreen(items: checkoutItems),
+			),
+		);
 	}
 }
 

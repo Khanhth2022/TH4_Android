@@ -6,10 +6,12 @@ class HomeAppBar extends StatelessWidget {
   const HomeAppBar({
     super.key,
     required this.cartCount,
+    required this.onOrdersPressed,
     required this.onCartPressed,
   });
 
   final int cartCount;
+  final VoidCallback onOrdersPressed;
   final VoidCallback onCartPressed;
 
   @override
@@ -40,6 +42,11 @@ class HomeAppBar extends StatelessWidget {
         style: TextStyle(fontWeight: FontWeight.w800),
       ),
       actions: <Widget>[
+        IconButton(
+          tooltip: 'Đơn mua',
+          onPressed: onOrdersPressed,
+          icon: const Icon(Icons.receipt_long_outlined),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: Stack(

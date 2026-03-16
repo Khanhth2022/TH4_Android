@@ -26,16 +26,53 @@ class ProductModel {
   final String tag;
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final dynamic ratingRaw = json['rating'];
+    final double parsedRating;
+    final int parsedRatingCount;
+
+    if (ratingRaw is num) {
+      parsedRating = ratingRaw.toDouble();
+      parsedRatingCount =
+          (json['ratingCount'] as num?)?.toInt() ??
+          (json['stock'] as num?)?.toInt() ??
+          0;
+    } else if (ratingRaw is Map<String, dynamic>) {
+      parsedRating = (ratingRaw['rate'] as num?)?.toDouble() ?? 0;
+      parsedRatingCount =
+          (ratingRaw['count'] as num?)?.toInt() ??
+          (json['stock'] as num?)?.toInt() ??
+          0;
+    } else {
+      parsedRating = 0;
+      parsedRatingCount =
+          (json['ratingCount'] as num?)?.toInt() ??
+          (json['stock'] as num?)?.toInt() ??
+          0;
+    }
+
+    final dynamic imagesRaw = json['images'];
+    final List<String> parsedImages = imagesRaw is List
+        ? imagesRaw.map((e) => e.toString()).toList(growable: false)
+        : <String>[];
+
+    final String parsedImage = (json['thumbnail'] ?? json['image'] ?? '')
+        .toString();
+
     return ProductModel(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      title: (json['title'] ?? '') as String,
-      price: (json['price'] as num?)?.toDouble() ?? 0,
-      description: (json['description'] ?? '') as String,
-      category: (json['category'] ?? '') as String,
-      image: (json['thumbnail'] ?? '') as String,
-      images: List<String>.from(json['images'] ?? []),
-      rating: (json['rating'] as num?)?.toDouble() ?? 0,
-      ratingCount: (json['stock'] as num?)?.toInt() ?? 0, // DummyJSON không có ratingCount, dùng stock làm ví dụ
+      title: (json['title'] ?? '').toString(),
+      price:
+          (json['price'] as num?)?.toDouble() ??
+          double.tryParse((json['price'] ?? '').toString()) ??
+          0,
+      description: (json['description'] ?? '').toString(),
+      category: (json['category'] ?? '').toString(),
+      image: parsedImage,
+      images: parsedImages.isNotEmpty
+          ? parsedImages
+          : (parsedImage.isNotEmpty ? <String>[parsedImage] : <String>[]),
+      rating: parsedRating,
+      ratingCount: parsedRatingCount,
       sold: 0,
       tag: 'Mall',
     );

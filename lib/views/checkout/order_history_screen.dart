@@ -1,200 +1,212 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
-import 'order_local_store.dart';
+import '../../models/order_model.dart';
+import '../../providers/order_provider.dart';
 
-class OrderHistoryScreen extends StatefulWidget {
-  const OrderHistoryScreen({super.key});
+class OrderHistoryScreen extends StatelessWidget {
+	const OrderHistoryScreen({super.key});
 
-  @override
-  State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+	static const List<OrderStatus> _statuses = <OrderStatus>[
+		OrderStatus.pending,
+		OrderStatus.shipping,
+		OrderStatus.delivered,
+		OrderStatus.cancelled,
+	];
+
+	@override
+	Widget build(BuildContext context) {
+		return DefaultTabController(
+			length: _statuses.length,
+			child: Scaffold(
+				appBar: AppBar(
+					title: const Text('Đơn mua'),
+				),
+				body: Column(
+					children: <Widget>[
+						Material(
+							color: Colors.white,
+							child: TabBar(
+								isScrollable: true,
+								indicatorColor: AppColors.primary,
+								labelColor: AppColors.primary,
+								unselectedLabelColor: AppColors.textSecondary,
+								tabs: _statuses
+										.map((status) => Tab(text: status.label))
+										.toList(growable: false),
+							),
+						),
+						Expanded(
+							child: Consumer<OrderProvider>(
+								builder: (context, orderProvider, _) {
+									return TabBarView(
+										children: _statuses
+												.map(
+													(status) => _OrdersTabContent(
+														orders: orderProvider.ordersByStatus(status),
+														emptyMessage:
+																'Chưa có đơn nào ở trạng thái "${status.label}".',
+													),
+												)
+												.toList(growable: false),
+									);
+								},
+							),
+						),
+					],
+				),
+			),
+		);
+	}
 }
 
-class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
-  late Future<List<CheckoutOrder>> _ordersFuture;
+class _OrdersTabContent extends StatelessWidget {
+	const _OrdersTabContent({
+		required this.orders,
+		required this.emptyMessage,
+	});
 
-  @override
-  void initState() {
-    super.initState();
-    _ordersFuture = OrderLocalStore.getOrders();
-  }
+	final List<OrderModel> orders;
+	final String emptyMessage;
 
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Đơn mua'),
-          bottom: const TabBar(
-            isScrollable: true,
-            tabs: [
-              Tab(text: 'Chờ xác nhận'),
-              Tab(text: 'Đang giao'),
-              Tab(text: 'Đã giao'),
-              Tab(text: 'Đã hủy'),
-            ],
-          ),
-        ),
-        body: FutureBuilder<List<CheckoutOrder>>(
-          future: _ordersFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
+	@override
+	Widget build(BuildContext context) {
+		if (orders.isEmpty) {
+			return Center(
+				child: Padding(
+					padding: const EdgeInsets.all(20),
+					child: Text(
+						emptyMessage,
+						textAlign: TextAlign.center,
+						style: const TextStyle(color: AppColors.textSecondary),
+					),
+				),
+			);
+		}
 
-            final allOrders = snapshot.data ?? <CheckoutOrder>[];
-
-            return TabBarView(
-              children: [
-                _OrderTabBody(
-                  orders: _filterByStatus(
-                    allOrders,
-                    CheckoutOrderStatus.pending,
-                  ),
-                ),
-                _OrderTabBody(
-                  orders: _filterByStatus(
-                    allOrders,
-                    CheckoutOrderStatus.shipping,
-                  ),
-                ),
-                _OrderTabBody(
-                  orders: _filterByStatus(
-                    allOrders,
-                    CheckoutOrderStatus.delivered,
-                  ),
-                ),
-                _OrderTabBody(
-                  orders: _filterByStatus(
-                    allOrders,
-                    CheckoutOrderStatus.canceled,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  List<CheckoutOrder> _filterByStatus(
-    List<CheckoutOrder> allOrders,
-    String status,
-  ) {
-    return allOrders.where((order) => order.status == status).toList();
-  }
-}
-
-class _OrderTabBody extends StatelessWidget {
-  const _OrderTabBody({required this.orders});
-
-  final List<CheckoutOrder> orders;
-
-  @override
-  Widget build(BuildContext context) {
-    if (orders.isEmpty) {
-      return const Center(
-        child: Text(
-          'Chưa có đơn hàng trong mục này.',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(12),
-      itemCount: orders.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return _OrderCard(order: order);
-      },
-    );
-  }
+		return ListView.separated(
+			padding: const EdgeInsets.all(12),
+			itemCount: orders.length,
+			separatorBuilder: (_, __) => const SizedBox(height: 10),
+			itemBuilder: (context, index) => _OrderCard(order: orders[index]),
+		);
+	}
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order});
+	const _OrderCard({required this.order});
 
-  final CheckoutOrder order;
+	final OrderModel order;
 
-  @override
-  Widget build(BuildContext context) {
-    final dateText = _formatDate(order.createdAt);
+	String _formatDate(DateTime value) {
+		String twoDigits(int number) => number.toString().padLeft(2, '0');
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Mã đơn: ${order.id}',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              Text(
-                CheckoutOrderStatus.toDisplayName(order.status),
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            dateText,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Địa chỉ: ${order.address}',
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Thanh toán: ${CheckoutPaymentMethod.toDisplayName(order.paymentMethod)}',
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-          const Divider(height: 20),
-          Text(
-            '${order.items.length} sản phẩm',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Tổng tiền: \$${order.totalAmount.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+		return '${twoDigits(value.day)}/${twoDigits(value.month)}/${value.year} '
+				'${twoDigits(value.hour)}:${twoDigits(value.minute)}';
+	}
 
-  String _formatDate(DateTime value) {
-    final day = value.day.toString().padLeft(2, '0');
-    final month = value.month.toString().padLeft(2, '0');
-    final year = value.year.toString();
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$day/$month/$year $hour:$minute';
-  }
+	@override
+	Widget build(BuildContext context) {
+		final statusColor = switch (order.status) {
+			OrderStatus.pending => const Color(0xFFF59E0B),
+			OrderStatus.shipping => const Color(0xFF2563EB),
+			OrderStatus.delivered => const Color(0xFF16A34A),
+			OrderStatus.cancelled => const Color(0xFFDC2626),
+		};
+
+		return Container(
+			padding: const EdgeInsets.all(12),
+			decoration: BoxDecoration(
+				color: Colors.white,
+				borderRadius: BorderRadius.circular(12),
+			),
+			child: Column(
+				crossAxisAlignment: CrossAxisAlignment.start,
+				children: <Widget>[
+					Row(
+						children: <Widget>[
+							Expanded(
+								child: Text(
+									'Mã đơn: ${order.id}',
+									style: const TextStyle(
+										fontWeight: FontWeight.w700,
+										color: AppColors.textPrimary,
+									),
+								),
+							),
+							Container(
+								padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+								decoration: BoxDecoration(
+									color: statusColor.withValues(alpha: 0.12),
+									borderRadius: BorderRadius.circular(20),
+								),
+								child: Text(
+									order.status.label,
+									style: TextStyle(
+										color: statusColor,
+										fontSize: 12,
+										fontWeight: FontWeight.w700,
+									),
+								),
+							),
+						],
+					),
+					const SizedBox(height: 6),
+					Text(
+						_formatDate(order.createdAt),
+						style: const TextStyle(
+							color: AppColors.textSecondary,
+							fontSize: 12,
+						),
+					),
+					const SizedBox(height: 8),
+					Text(
+						'Địa chỉ: ${order.address}',
+						style: const TextStyle(color: AppColors.textSecondary),
+					),
+					const SizedBox(height: 2),
+					Text(
+						'Thanh toán: ${order.paymentMethod.label}',
+						style: const TextStyle(color: AppColors.textSecondary),
+					),
+					const SizedBox(height: 8),
+					...order.items.map(
+						(item) => Padding(
+							padding: const EdgeInsets.only(bottom: 4),
+							child: Row(
+								children: <Widget>[
+									Expanded(
+										child: Text(
+											'${item.product.title} x${item.quantity}',
+											maxLines: 1,
+											overflow: TextOverflow.ellipsis,
+										),
+									),
+									Text('\$${item.subtotal.toStringAsFixed(2)}'),
+								],
+							),
+						),
+					),
+					const Divider(height: 16),
+					Row(
+						children: <Widget>[
+							Text(
+								'${order.totalUnits} sản phẩm',
+								style: const TextStyle(color: AppColors.textSecondary),
+							),
+							const Spacer(),
+							Text(
+								'Tổng: \$${order.totalAmount.toStringAsFixed(2)}',
+								style: const TextStyle(
+									color: AppColors.primary,
+									fontWeight: FontWeight.w700,
+								),
+							),
+						],
+					),
+				],
+			),
+		);
+	}
 }

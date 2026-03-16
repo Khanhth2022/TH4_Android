@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/constants/app_colors.dart';
 import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
 import 'views/home/home_screen.dart';
 
 Future<void> main() async {
@@ -11,18 +12,29 @@ Future<void> main() async {
   final cartProvider = CartProvider();
   await cartProvider.loadCart();
 
-  runApp(MyApp(cartProvider: cartProvider));
+  final orderProvider = OrderProvider();
+  await orderProvider.loadOrders();
+
+  runApp(MyApp(cartProvider: cartProvider, orderProvider: orderProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.cartProvider});
+  const MyApp({
+    super.key,
+    required this.cartProvider,
+    required this.orderProvider,
+  });
 
   final CartProvider cartProvider;
+  final OrderProvider orderProvider;
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<CartProvider>.value(
-      value: cartProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<CartProvider>.value(value: cartProvider),
+        ChangeNotifierProvider<OrderProvider>.value(value: orderProvider),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'E-Commerce TH4',

@@ -7,6 +7,7 @@ import '../../models/product_model.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
 import '../cart/cart_screen.dart';
+import '../checkout/order_history_screen.dart';
 import 'widgets/banner_slider.dart';
 import 'widgets/category_item.dart';
 import 'widgets/home_app_bar.dart';
@@ -160,6 +161,13 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
               slivers: <Widget>[
                 HomeAppBar(
                   cartCount: cartCount,
+                  onOrdersPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const OrderHistoryScreen(),
+                      ),
+                    );
+                  },
                   onCartPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(

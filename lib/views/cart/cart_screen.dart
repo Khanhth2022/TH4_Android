@@ -4,76 +4,88 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/cart_provider.dart';
 import '../checkout/checkout_screen.dart';
+import '../checkout/order_history_screen.dart';
 import 'widgets/cart_item_tile.dart';
 import 'widgets/cart_summary_bar.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Giỏ hàng'),
-        actions: [
-          Consumer<CartProvider>(
-            builder: (context, cart, child) {
-              return IconButton(
-                tooltip: 'Xóa sản phẩm đã chọn',
-                onPressed: cart.selectedItems.isEmpty
-                    ? null
-                    : () => _confirmClearSelected(context),
-                icon: const Icon(Icons.delete_sweep_outlined),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Consumer<CartProvider>(
-        builder: (context, cart, child) {
-          if (cart.items.isEmpty) {
-            return _EmptyCartView(
-              onGoShopping: () => Navigator.of(context).pop(),
-            );
-          }
+	@override
+	Widget build(BuildContext context) {
+		return Scaffold(
+			appBar: AppBar(
+				title: const Text('Giỏ hàng'),
+				actions: [
+					IconButton(
+						tooltip: 'Đơn mua',
+						onPressed: () {
+							Navigator.of(context).push(
+								MaterialPageRoute<void>(
+									builder: (_) => const OrderHistoryScreen(),
+								),
+							);
+						},
+						icon: const Icon(Icons.receipt_long_outlined),
+					),
+					Consumer<CartProvider>(
+						builder: (context, cart, child) {
+							return IconButton(
+								tooltip: 'Xóa sản phẩm đã chọn',
+								onPressed: cart.selectedItems.isEmpty
+										? null
+										: () => _confirmClearSelected(context),
+								icon: const Icon(Icons.delete_sweep_outlined),
+							);
+						},
+					),
+				],
+			),
+			body: Consumer<CartProvider>(
+				builder: (context, cart, child) {
+					if (cart.items.isEmpty) {
+						return _EmptyCartView(
+							onGoShopping: () => Navigator.of(context).pop(),
+						);
+					}
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: cart.items.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final item = cart.items[index];
-                    return CartItemTile(
-                      item: item,
-                      onToggle: (value) {
-                        cart.toggleItemSelection(index, value);
-                      },
-                      onDecrease: () => cart.decreaseQty(index),
-                      onIncrease: () => cart.increaseQty(index),
-                      onRemove: () => _confirmRemoveItem(context, index),
-                    );
-                  },
-                ),
-              ),
-              CartSummaryBar(
-                isSelectAll: cart.isSelectAll,
-                selectedCount: cart.selectedItems.length,
-                total: cart.selectedTotalPrice,
-                onToggleSelectAll: (selected) {
-                  cart.toggleSelectAll(selected);
-                },
-                onBuy: () => _simulateBuy(context),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
+					return Column(
+						children: [
+							Expanded(
+								child: ListView.separated(
+									padding: const EdgeInsets.all(12),
+									itemCount: cart.items.length,
+									separatorBuilder: (context, index) =>
+											const SizedBox(height: 10),
+									itemBuilder: (context, index) {
+										final item = cart.items[index];
+										return CartItemTile(
+											item: item,
+											onToggle: (value) {
+												cart.toggleItemSelection(index, value);
+											},
+											onDecrease: () => cart.decreaseQty(index),
+											onIncrease: () => cart.increaseQty(index),
+											onRemove: () => _confirmRemoveItem(context, index),
+										);
+									},
+								),
+							),
+							CartSummaryBar(
+								isSelectAll: cart.isSelectAll,
+								selectedCount: cart.selectedItems.length,
+								total: cart.selectedTotalPrice,
+								onToggleSelectAll: (selected) {
+									cart.toggleSelectAll(selected);
+								},
+								onBuy: () => _goToCheckout(context),
+							),
+						],
+					);
+				},
+			),
+		);
+	}
 
   Future<void> _confirmRemoveItem(BuildContext context, int index) async {
     final cart = context.read<CartProvider>();
@@ -144,18 +156,30 @@ class CartScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _simulateBuy(BuildContext context) async {
-    final cart = context.read<CartProvider>();
-    if (cart.selectedItems.isEmpty) {
-      return;
-    }
+	Future<void> _goToCheckout(BuildContext context) async {
+		final cart = context.read<CartProvider>();
+		if (cart.selectedItems.isEmpty) {
+			return;
+		}
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => CheckoutScreen(selectedItems: cart.selectedItems),
-      ),
-    );
-  }
+		final checkoutItems = cart.selectedItems
+				.map(
+					(item) => item.copyWith(
+						product: item.product,
+						quantity: item.quantity,
+						selected: item.selected,
+						selectedSize: item.selectedSize,
+						selectedColor: item.selectedColor,
+					),
+				)
+				.toList(growable: false);
+
+		await Navigator.of(context).push(
+			MaterialPageRoute<void>(
+				builder: (_) => CheckoutScreen(items: checkoutItems),
+			),
+		);
+	}
 }
 
 class _EmptyCartView extends StatelessWidget {

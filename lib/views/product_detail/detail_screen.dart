@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/product_model.dart';
 import '../../providers/cart_provider.dart';
+import '../cart/cart_screen.dart';
 import 'widgets/product_image_slider.dart';
 import 'widgets/variation_picker.dart';
 import 'widgets/expandable_text.dart';
@@ -23,6 +24,73 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 	int quantity = 1;
 	final List<String> sizes = ['S', 'M', 'L'];
 	final List<String> colors = ['Đỏ', 'Xanh'];
+
+	void _goToCart() {
+		Navigator.of(context).push(
+			MaterialPageRoute(builder: (_) => const CartScreen()),
+		);
+	}
+
+	void _openChatInput() {
+		final controller = TextEditingController();
+		showModalBottomSheet(
+			context: context,
+			isScrollControlled: true,
+			shape: const RoundedRectangleBorder(
+				borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+			),
+			builder: (sheetContext) {
+				return Padding(
+					padding: EdgeInsets.only(
+						left: 16,
+						right: 16,
+						top: 16,
+						bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+					),
+					child: Column(
+						mainAxisSize: MainAxisSize.min,
+						crossAxisAlignment: CrossAxisAlignment.start,
+						children: [
+							const Text(
+								'Nhắn tin với shop',
+								style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+							),
+							const SizedBox(height: 10),
+							TextField(
+								controller: controller,
+								autofocus: true,
+								maxLines: 3,
+								minLines: 1,
+								decoration: const InputDecoration(
+									hintText: 'Nhập tin nhắn cho shop...',
+									border: OutlineInputBorder(),
+								),
+							),
+							const SizedBox(height: 12),
+							SizedBox(
+								width: double.infinity,
+								child: ElevatedButton(
+									onPressed: () {
+										Navigator.pop(sheetContext);
+										ScaffoldMessenger.of(context).showSnackBar(
+											SnackBar(
+												content: Text(
+													controller.text.trim().isEmpty
+														? 'Vui lòng nhập nội dung tin nhắn'
+														: 'Đã gửi tin nhắn tới shop',
+												),
+											),
+										);
+									},
+									child: const Text('Gửi tin nhắn'),
+								),
+							),
+						],
+					),
+				);
+			},
+		).whenComplete(controller.dispose);
+	}
 
 	void _showAddToCartSheet() {
 		showModalBottomSheet(
@@ -245,11 +313,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 					children: [
 						IconButton(
 							icon: const Icon(Icons.chat_bubble_outline),
-							onPressed: () {},
+							onPressed: _openChatInput,
 						),
 						IconButton(
 							icon: const Icon(Icons.shopping_cart_outlined),
-							onPressed: () {},
+							onPressed: _goToCart,
 						),
 						const SizedBox(width: 8),
 						Expanded(
@@ -269,9 +337,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 										size: selectedSize,
 										color: selectedColor,
 									);
-									ScaffoldMessenger.of(context).showSnackBar(
-										const SnackBar(content: Text('Thêm vào giỏ hàng thành công')),
-									);
+									_goToCart();
 								},
 								style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
 								child: const Text('Mua ngay'),

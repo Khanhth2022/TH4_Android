@@ -27,10 +27,10 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String selectedSize = 'M';
-  String selectedColor = '�?';
+  String selectedColor = 'Đỏ';
   int quantity = 1;
   final List<String> sizes = ['S', 'M', 'L'];
-  final List<String> colors = ['�?', 'Xanh'];
+  final List<String> colors = ['Đỏ', 'Xanh'];
 
   void _goToCart() {
     Navigator.of(
@@ -61,7 +61,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Nh?n tin v?i shop',
+                'Nhắn tin với shop',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 10),
@@ -71,7 +71,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 minLines: 1,
                 onChanged: (value) => messageText = value,
                 decoration: const InputDecoration(
-                  hintText: 'Nh?p tin nh?n cho shop...',
+                  hintText: 'Nhập tin nhắn cho shop...',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -83,7 +83,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     FocusScope.of(sheetContext).unfocus();
                     Navigator.pop(sheetContext, messageText.trim());
                   },
-                  child: const Text('G?i tin nh?n'),
+                  child: const Text('Gửi tin nhắn'),
                 ),
               ),
             ],
@@ -100,8 +100,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       SnackBar(
         content: Text(
           submittedMessage.isEmpty
-              ? 'Vui l�ng nh?p n?i dung tin nh?n'
-              : '�� g?i tin nh?n t?i shop',
+              ? 'Vui lòng nhập nội dung tin nhắn'
+              : 'Đã gửi tin nhắn tới shop',
         ),
       ),
     );
@@ -225,11 +225,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Th�m v�o gi? h�ng th�nh c�ng'),
+                            content: Text('Thêm vào giỏ hàng thành công'),
                           ),
                         );
                       },
-                      child: const Text('X�c nh?n'),
+                      child: const Text('Xác nhận'),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -266,7 +266,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chi ti?t s?n ph?m'),
+        title: const Text('Chi tiết sản phẩm'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
@@ -349,7 +349,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Ch?n K�ch c?, M�u s?c',
+                                'Chọn Kích cỡ, Màu sắc',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -370,7 +370,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      'M� t? s?n ph?m:',
+                      'Mô tả sản phẩm:',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     ExpandableText(text: product.description),
@@ -412,7 +412,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Color(0xFFE07B00), width: 1),
                 ),
-                child: const Text('Th�m v�o gi? h�ng'),
+                child: const Text('Thêm vào giỏ hàng'),
               ),
             ),
             const SizedBox(width: 8),

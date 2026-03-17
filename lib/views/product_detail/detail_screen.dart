@@ -185,7 +185,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 18),
                   Row(
                     children: [
-                      const Text('S? lu?ng:'),
+                      const Text('Số lượng:'),
                       const SizedBox(width: 12),
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline),

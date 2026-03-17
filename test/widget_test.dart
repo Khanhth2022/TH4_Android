@@ -8,16 +8,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:e_commerce/main.dart';
-import 'package:e_commerce/providers/cart_provider.dart';
-import 'package:e_commerce/providers/order_provider.dart';
+import 'package:e_commerce/views/home/widgets/home_app_bar.dart';
 
 void main() {
   testWidgets('App renders required home app bar', (WidgetTester tester) async {
     await tester.pumpWidget(
-      MyApp(
-        cartProvider: CartProvider(),
-        orderProvider: OrderProvider(),
+      const MaterialApp(
+        home: CustomScrollView(
+          slivers: <Widget>[
+            HomeAppBar(
+              cartCount: 0,
+              isAuthenticated: false,
+              onAuthPressed: _noop,
+              onOrdersPressed: _noop,
+              onCartPressed: _noop,
+            ),
+          ],
+        ),
       ),
     );
 
@@ -25,3 +32,5 @@ void main() {
     expect(find.byIcon(Icons.shopping_bag_outlined), findsOneWidget);
   });
 }
+
+void _noop() {}

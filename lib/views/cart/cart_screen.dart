@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../providers/cart_provider.dart';
+import '../auth/auth_gate.dart';
 import '../checkout/checkout_screen.dart';
 import '../checkout/order_history_screen.dart';
 import 'widgets/cart_item_tile.dart';
@@ -60,6 +61,9 @@ class CartScreen extends StatelessWidget {
 									itemBuilder: (context, index) {
 										final item = cart.items[index];
 										return CartItemTile(
+                      key: ValueKey(
+                        '${item.product.id}-${item.selectedSize}-${item.selectedColor}',
+                      ),
 											item: item,
 											onToggle: (value) {
 												cart.toggleItemSelection(index, value);
@@ -157,6 +161,11 @@ class CartScreen extends StatelessWidget {
   }
 
 	Future<void> _goToCheckout(BuildContext context) async {
+    final canContinue = await ensureAuthenticated(context);
+    if (!canContinue || !context.mounted) {
+      return;
+    }
+
 		final cart = context.read<CartProvider>();
 		if (cart.selectedItems.isEmpty) {
 			return;

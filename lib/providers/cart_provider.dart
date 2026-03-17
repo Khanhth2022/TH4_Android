@@ -5,11 +5,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/cart_model.dart';
 import '../models/product_model.dart';
+import '../services/cart_firestore_service.dart';
 
 class CartProvider extends ChangeNotifier {
+  CartProvider({CartFirestoreService? firestoreService})
+      : _firestoreService = firestoreService ?? CartFirestoreService();
+
   static const String _cartStorageKey = 'cart_items_v1';
 
+  final CartFirestoreService _firestoreService;
   final List<CartItemModel> _items = <CartItemModel>[];
+  String? _userId;
+  int _syncVersion = 0;
 
   List<CartItemModel> get items => List<CartItemModel>.unmodifiable(_items);
 
@@ -28,10 +35,28 @@ class CartProvider extends ChangeNotifier {
         .fold(0, (sum, item) => sum + item.subtotal);
   }
 
+  void bindUser(String? userId) {
+    if (_userId == userId) {
+      return;
+    }
+
+    _userId = userId;
+    _syncVersion += 1;
+    final int currentSync = _syncVersion;
+    _syncForCurrentUser(currentSync);
+  }
+
   Future<void> loadCart() async {
+    if (_userId != null) {
+      await _loadFromFirestore(_userId!);
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_cartStorageKey);
     if (raw == null || raw.isEmpty) {
+      _items.clear();
+      notifyListeners();
       return;
     }
 
@@ -72,8 +97,8 @@ class CartProvider extends ChangeNotifier {
       _items[index].selected = true;
     }
 
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> removeAt(int index) async {
@@ -81,14 +106,14 @@ class CartProvider extends ChangeNotifier {
       return;
     }
     _items.removeAt(index);
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> removeByProduct(int productId) async {
     _items.removeWhere((item) => item.product.id == productId);
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> updateQuantity(int index, int newQuantity) async {
@@ -101,8 +126,8 @@ class CartProvider extends ChangeNotifier {
     }
 
     _items[index].quantity = newQuantity;
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> increaseQty(int index) async {
@@ -110,8 +135,8 @@ class CartProvider extends ChangeNotifier {
       return;
     }
     _items[index].quantity += 1;
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> decreaseQty(int index) async {
@@ -124,8 +149,8 @@ class CartProvider extends ChangeNotifier {
       return;
     }
     _items[index].quantity = current - 1;
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> toggleItemSelection(int index, bool? selected) async {
@@ -133,22 +158,22 @@ class CartProvider extends ChangeNotifier {
       return;
     }
     _items[index].selected = selected ?? false;
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> toggleSelectAll(bool selected) async {
     for (final item in _items) {
       item.selected = selected;
     }
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> clearSelected() async {
     _items.removeWhere((item) => item.selected);
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> removeItems(List<CartItemModel> itemsToRemove) async {
@@ -165,20 +190,62 @@ class CartProvider extends ChangeNotifier {
       );
     });
 
-    await _saveCart();
     notifyListeners();
+    await _persistChanges();
   }
 
   Future<void> clearAll() async {
     _items.clear();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_cartStorageKey);
     notifyListeners();
+    await _persistChanges();
+  }
+
+  Future<void> _persistChanges() async {
+    try {
+      await _saveCart();
+    } catch (e, stackTrace) {
+      // Keep UI responsive even if persistence fails temporarily.
+      debugPrint('Cart persistence failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> _saveCart() async {
+    if (_userId != null) {
+      await _firestoreService.saveCart(_userId!, _items);
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final payload = _items.map((e) => e.toJson()).toList(growable: false);
     await prefs.setString(_cartStorageKey, jsonEncode(payload));
+  }
+
+  Future<void> _syncForCurrentUser(int syncVersion) async {
+    if (_userId == null) {
+      _items.clear();
+      notifyListeners();
+      return;
+    }
+
+    final String uid = _userId!;
+    await _loadFromFirestore(uid);
+
+    if (syncVersion != _syncVersion) {
+      return;
+    }
+  }
+
+  Future<void> _loadFromFirestore(String uid) async {
+    try {
+      final remoteItems = await _firestoreService.fetchCart(uid);
+      _items
+        ..clear()
+        ..addAll(remoteItems);
+      notifyListeners();
+    } catch (_) {
+      _items.clear();
+      notifyListeners();
+    }
   }
 }

@@ -1,0 +1,24 @@
+{
+	"firestore": {
+		"rules": "firestore.rules"
+	},
+	"flutter": {
+		"platforms": {
+			"android": {
+				"default": {
+					"projectId": "th4flutter",
+					"appId": "1:942275160903:android:41506adaf93430607e7a62",
+					"fileOutput": "android/app/google-services.json"
+				}
+			},
+			"dart": {
+				"lib/firebase_options.dart": {
+					"projectId": "th4flutter",
+					"configurations": {
+						"android": "1:942275160903:android:41506adaf93430607e7a62"
+					}
+				}
+			}
+		}
+	}
+}

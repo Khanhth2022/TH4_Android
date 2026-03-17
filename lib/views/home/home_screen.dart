@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../product_detail/detail_screen.dart';
 import '../../models/product_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
+import '../auth/auth_gate.dart';
+import '../auth/auth_screen.dart';
 import '../cart/cart_screen.dart';
 import '../checkout/order_history_screen.dart';
 import 'widgets/banner_slider.dart';
@@ -144,7 +147,10 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
   @override
   Widget build(BuildContext context) {
     final cartCount = context.select<CartProvider, int>(
-      (cart) => cart.itemTypesCount,
+      (cart) => cart.totalUnits,
+    );
+    final isAuthenticated = context.select<AuthProvider, bool>(
+      (auth) => auth.isAuthenticated,
     );
 
     return Scaffold(
@@ -161,6 +167,25 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
               slivers: <Widget>[
                 HomeAppBar(
                   cartCount: cartCount,
+                  isAuthenticated: isAuthenticated,
+                  onAuthPressed: () async {
+                    final auth = context.read<AuthProvider>();
+                    if (auth.isAuthenticated) {
+                      await auth.signOut();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đã đăng xuất')),
+                        );
+                      }
+                      return;
+                    }
+
+                    await Navigator.of(context).push<bool>(
+                      MaterialPageRoute<bool>(
+                        builder: (_) => const AuthScreen(),
+                      ),
+                    );
+                  },
                   onOrdersPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -472,7 +497,14 @@ class _ProductCard extends StatelessWidget {
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: () {
+                          onTap: () async {
+                            final canContinue = await ensureAuthenticated(
+                              context,
+                            );
+                            if (!canContinue || !context.mounted) {
+                              return;
+                            }
+
                             context.read<CartProvider>().addToCart(product);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

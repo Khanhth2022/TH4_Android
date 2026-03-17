@@ -8,14 +8,14 @@ class VariationPicker extends StatelessWidget {
 	final ValueChanged<String> onSizeChanged;
 	final ValueChanged<String> onColorChanged;
 	const VariationPicker({
-		Key? key,
+		super.key,
 		required this.sizes,
 		required this.colors,
 		required this.selectedSize,
 		required this.selectedColor,
 		required this.onSizeChanged,
 		required this.onColorChanged,
-	}) : super(key: key);
+	});
 
 	@override
 	Widget build(BuildContext context) {

@@ -3,21 +3,23 @@ import 'package:provider/provider.dart';
 
 import '../../models/product_model.dart';
 import '../../providers/cart_provider.dart';
+import '../auth/auth_gate.dart';
 import '../cart/cart_screen.dart';
+import 'widgets/expandable_text.dart';
 import 'widgets/product_image_slider.dart';
 import 'widgets/variation_picker.dart';
-import 'widgets/expandable_text.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  final ProductModel product;
-  final String? heroTag;
-  final List<String>? imageUrls;
   const ProductDetailScreen({
-    Key? key,
+    super.key,
     required this.product,
     this.heroTag,
     this.imageUrls,
-  }) : super(key: key);
+  });
+
+  final ProductModel product;
+  final String? heroTag;
+  final List<String>? imageUrls;
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -25,10 +27,10 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String selectedSize = 'M';
-  String selectedColor = 'Đỏ';
+  String selectedColor = '�?';
   int quantity = 1;
   final List<String> sizes = ['S', 'M', 'L'];
-  final List<String> colors = ['Đỏ', 'Xanh'];
+  final List<String> colors = ['�?', 'Xanh'];
 
   void _goToCart() {
     Navigator.of(
@@ -59,7 +61,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Nhắn tin với shop',
+                'Nh?n tin v?i shop',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 10),
@@ -69,7 +71,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 minLines: 1,
                 onChanged: (value) => messageText = value,
                 decoration: const InputDecoration(
-                  hintText: 'Nhập tin nhắn cho shop...',
+                  hintText: 'Nh?p tin nh?n cho shop...',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -81,7 +83,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     FocusScope.of(sheetContext).unfocus();
                     Navigator.pop(sheetContext, messageText.trim());
                   },
-                  child: const Text('Gửi tin nhắn'),
+                  child: const Text('G?i tin nh?n'),
                 ),
               ),
             ],
@@ -98,14 +100,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       SnackBar(
         content: Text(
           submittedMessage.isEmpty
-              ? 'Vui lòng nhập nội dung tin nhắn'
-              : 'Đã gửi tin nhắn tới shop',
+              ? 'Vui l�ng nh?p n?i dung tin nh?n'
+              : '�� g?i tin nh?n t?i shop',
         ),
       ),
     );
   }
 
-  void _showAddToCartSheet() {
+  Future<void> _showAddToCartSheet() async {
+    final canContinue = await ensureAuthenticated(context);
+    if (!canContinue || !mounted) {
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -178,7 +185,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 18),
                   Row(
                     children: [
-                      const Text('Số lượng:'),
+                      const Text('S? lu?ng:'),
                       const SizedBox(width: 12),
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline),
@@ -218,11 +225,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Thêm vào giỏ hàng thành công'),
+                            content: Text('Th�m v�o gi? h�ng th�nh c�ng'),
                           ),
                         );
                       },
-                      child: const Text('Xác nhận'),
+                      child: const Text('X�c nh?n'),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -246,7 +253,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         buffer.write('.');
       }
     }
-    return '${buffer.toString()}đ';
+    return '${buffer.toString()}d';
   }
 
   @override
@@ -256,9 +263,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final List<String> images = widget.imageUrls ?? product.images;
     const addToCartColor = Color(0xFFFF8F00);
     const buyNowColor = Color(0xFFC62828);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chi tiết sản phẩm'),
+        title: const Text('Chi ti?t s?n ph?m'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
@@ -341,7 +349,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Chọn Kích cỡ, Màu sắc',
+                                'Ch?n K�ch c?, M�u s?c',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -362,7 +370,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      'Mô tả sản phẩm:',
+                      'M� t? s?n ph?m:',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     ExpandableText(text: product.description),
@@ -398,19 +406,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: ElevatedButton(
-                onPressed: _showAddToCartSheet,
+                onPressed: () => _showAddToCartSheet(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: addToCartColor,
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Color(0xFFE07B00), width: 1),
                 ),
-                child: const Text('Thêm vào giỏ hàng'),
+                child: const Text('Th�m v�o gi? h�ng'),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  final canContinue = await ensureAuthenticated(context);
+                  if (!canContinue || !context.mounted) {
+                    return;
+                  }
+
                   Provider.of<CartProvider>(context, listen: false).addToCart(
                     product,
                     quantity: quantity,

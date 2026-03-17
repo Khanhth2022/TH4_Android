@@ -6,11 +6,15 @@ class HomeAppBar extends StatelessWidget {
   const HomeAppBar({
     super.key,
     required this.cartCount,
+    required this.isAuthenticated,
+    required this.onAuthPressed,
     required this.onOrdersPressed,
     required this.onCartPressed,
   });
 
   final int cartCount;
+  final bool isAuthenticated;
+  final VoidCallback onAuthPressed;
   final VoidCallback onOrdersPressed;
   final VoidCallback onCartPressed;
 
@@ -42,6 +46,13 @@ class HomeAppBar extends StatelessWidget {
         style: TextStyle(fontWeight: FontWeight.w800),
       ),
       actions: <Widget>[
+        IconButton(
+          tooltip: isAuthenticated ? 'Đăng xuất' : 'Đăng nhập',
+          onPressed: onAuthPressed,
+          icon: Icon(
+            isAuthenticated ? Icons.logout_rounded : Icons.login_rounded,
+          ),
+        ),
         IconButton(
           tooltip: 'Đơn mua',
           onPressed: onOrdersPressed,

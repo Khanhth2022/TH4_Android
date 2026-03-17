@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ProductImageSlider extends StatefulWidget {
 	final List<String> imageUrls;
 	final String? heroTag;
-	const ProductImageSlider({Key? key, required this.imageUrls, this.heroTag}) : super(key: key);
+	const ProductImageSlider({super.key, required this.imageUrls, this.heroTag});
 
 	@override
 	State<ProductImageSlider> createState() => _ProductImageSliderState();

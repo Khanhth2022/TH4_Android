@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ExpandableText extends StatefulWidget {
 	final String text;
-	const ExpandableText({Key? key, required this.text}) : super(key: key);
+	const ExpandableText({super.key, required this.text});
 
 	@override
 	State<ExpandableText> createState() => _ExpandableTextState();
